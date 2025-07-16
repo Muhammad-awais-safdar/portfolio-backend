@@ -2,7 +2,7 @@ const FunFact = require('../models/FunFact');
 
 const getFunFacts = async (req, res) => {
   try {
-    const funFacts = await FunFact.find().sort({ order: 1, createdAt: -1 });
+    const funFacts = await FunFact.find({ userId: req.user._id }).sort({ order: 1, createdAt: -1 });
     res.json(funFacts);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching fun facts', error: error.message });
@@ -11,7 +11,7 @@ const getFunFacts = async (req, res) => {
 
 const createFunFact = async (req, res) => {
   try {
-    const funFact = new FunFact(req.body);
+    const funFact = new FunFact({ ...req.body, userId: req.user._id });
     await funFact.save();
     res.status(201).json(funFact);
   } catch (error) {
@@ -21,12 +21,16 @@ const createFunFact = async (req, res) => {
 
 const updateFunFact = async (req, res) => {
   try {
-    const funFact = await FunFact.findByIdAndUpdate(req.params.id, req.body, { 
-      new: true, 
-      runValidators: true 
-    });
+    const funFact = await FunFact.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      req.body,
+      { 
+        new: true, 
+        runValidators: true 
+      }
+    );
     if (!funFact) {
-      return res.status(404).json({ message: 'Fun fact not found' });
+      return res.status(404).json({ message: 'Fun fact not found or you do not have permission to update it' });
     }
     res.json(funFact);
   } catch (error) {
@@ -36,9 +40,9 @@ const updateFunFact = async (req, res) => {
 
 const deleteFunFact = async (req, res) => {
   try {
-    const funFact = await FunFact.findByIdAndDelete(req.params.id);
+    const funFact = await FunFact.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
     if (!funFact) {
-      return res.status(404).json({ message: 'Fun fact not found' });
+      return res.status(404).json({ message: 'Fun fact not found or you do not have permission to delete it' });
     }
     res.json({ message: 'Fun fact deleted successfully' });
   } catch (error) {

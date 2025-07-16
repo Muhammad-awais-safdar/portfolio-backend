@@ -2,7 +2,7 @@ const Pricing = require('../models/Pricing');
 
 const getPricings = async (req, res) => {
   try {
-    const pricings = await Pricing.find().sort({ order: 1, createdAt: -1 });
+    const pricings = await Pricing.find({ userId: req.user._id }).sort({ order: 1, createdAt: -1 });
     res.json(pricings);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching pricings', error: error.message });
@@ -11,7 +11,7 @@ const getPricings = async (req, res) => {
 
 const createPricing = async (req, res) => {
   try {
-    const pricing = new Pricing(req.body);
+    const pricing = new Pricing({ ...req.body, userId: req.user._id });
     await pricing.save();
     res.status(201).json(pricing);
   } catch (error) {
@@ -21,12 +21,16 @@ const createPricing = async (req, res) => {
 
 const updatePricing = async (req, res) => {
   try {
-    const pricing = await Pricing.findByIdAndUpdate(req.params.id, req.body, { 
-      new: true, 
-      runValidators: true 
-    });
+    const pricing = await Pricing.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      req.body,
+      { 
+        new: true, 
+        runValidators: true 
+      }
+    );
     if (!pricing) {
-      return res.status(404).json({ message: 'Pricing not found' });
+      return res.status(404).json({ message: 'Pricing not found or you do not have permission to update it' });
     }
     res.json(pricing);
   } catch (error) {
@@ -36,9 +40,9 @@ const updatePricing = async (req, res) => {
 
 const deletePricing = async (req, res) => {
   try {
-    const pricing = await Pricing.findByIdAndDelete(req.params.id);
+    const pricing = await Pricing.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
     if (!pricing) {
-      return res.status(404).json({ message: 'Pricing not found' });
+      return res.status(404).json({ message: 'Pricing not found or you do not have permission to delete it' });
     }
     res.json({ message: 'Pricing deleted successfully' });
   } catch (error) {

@@ -2,7 +2,7 @@ const About = require('../models/About');
 
 const getAbout = async (req, res) => {
   try {
-    const about = await About.findOne();
+    const about = await About.findOne({ userId: req.user._id });
     if (!about) {
       return res.status(404).json({ message: 'About information not found' });
     }
@@ -14,11 +14,15 @@ const getAbout = async (req, res) => {
 
 const updateAbout = async (req, res) => {
   try {
-    const about = await About.findOneAndUpdate({}, req.body, { 
-      new: true, 
-      upsert: true,
-      runValidators: true 
-    });
+    const about = await About.findOneAndUpdate(
+      { userId: req.user._id }, 
+      { ...req.body, userId: req.user._id }, 
+      { 
+        new: true, 
+        upsert: true,
+        runValidators: true 
+      }
+    );
     res.json(about);
   } catch (error) {
     res.status(400).json({ message: 'Error updating about information', error: error.message });

@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const introFeatureSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   icon: {
     type: String,
     required: true
@@ -25,5 +30,8 @@ const introFeatureSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Index for efficient querying by userId
+introFeatureSchema.index({ userId: 1 });
 
 module.exports = mongoose.model('IntroFeature', introFeatureSchema);

@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const awardSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   logo: {
     type: String,
     required: true
@@ -36,5 +41,8 @@ const awardSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Index for efficient querying by userId
+awardSchema.index({ userId: 1 });
 
 module.exports = mongoose.model('Award', awardSchema);

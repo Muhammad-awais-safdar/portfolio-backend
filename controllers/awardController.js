@@ -2,7 +2,7 @@ const Award = require('../models/Award');
 
 const getAwards = async (req, res) => {
   try {
-    const awards = await Award.find().sort({ order: 1, createdAt: -1 });
+    const awards = await Award.find({ userId: req.user._id }).sort({ order: 1, createdAt: -1 });
     res.json(awards);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching awards', error: error.message });
@@ -11,7 +11,7 @@ const getAwards = async (req, res) => {
 
 const createAward = async (req, res) => {
   try {
-    const award = new Award(req.body);
+    const award = new Award({ ...req.body, userId: req.user._id });
     await award.save();
     res.status(201).json(award);
   } catch (error) {
@@ -21,12 +21,16 @@ const createAward = async (req, res) => {
 
 const updateAward = async (req, res) => {
   try {
-    const award = await Award.findByIdAndUpdate(req.params.id, req.body, { 
-      new: true, 
-      runValidators: true 
-    });
+    const award = await Award.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      req.body,
+      { 
+        new: true, 
+        runValidators: true 
+      }
+    );
     if (!award) {
-      return res.status(404).json({ message: 'Award not found' });
+      return res.status(404).json({ message: 'Award not found or you do not have permission to update it' });
     }
     res.json(award);
   } catch (error) {
@@ -36,9 +40,9 @@ const updateAward = async (req, res) => {
 
 const deleteAward = async (req, res) => {
   try {
-    const award = await Award.findByIdAndDelete(req.params.id);
+    const award = await Award.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
     if (!award) {
-      return res.status(404).json({ message: 'Award not found' });
+      return res.status(404).json({ message: 'Award not found or you do not have permission to delete it' });
     }
     res.json({ message: 'Award deleted successfully' });
   } catch (error) {
