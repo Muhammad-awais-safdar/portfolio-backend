@@ -2,7 +2,7 @@ const Portfolio = require('../models/Portfolio');
 
 const getPortfolios = async (req, res) => {
   try {
-    const portfolios = await Portfolio.find({ userId: req.user._id }).sort({ order: 1, createdAt: -1 });
+    const portfolios = await Portfolio.find().sort({ order: 1, createdAt: -1 });
     res.json(portfolios);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching portfolios', error: error.message });
@@ -11,9 +11,9 @@ const getPortfolios = async (req, res) => {
 
 const getPortfolioById = async (req, res) => {
   try {
-    const portfolio = await Portfolio.findOne({ _id: req.params.id, userId: req.user._id });
+    const portfolio = await Portfolio.findById(req.params.id);
     if (!portfolio) {
-      return res.status(404).json({ message: 'Portfolio not found or you do not have permission to view it' });
+      return res.status(404).json({ message: 'Portfolio not found' });
     }
     res.json(portfolio);
   } catch (error) {
@@ -23,7 +23,7 @@ const getPortfolioById = async (req, res) => {
 
 const createPortfolio = async (req, res) => {
   try {
-    const portfolio = new Portfolio({ ...req.body, userId: req.user._id });
+    const portfolio = new Portfolio(req.body);
     await portfolio.save();
     res.status(201).json(portfolio);
   } catch (error) {
@@ -33,16 +33,12 @@ const createPortfolio = async (req, res) => {
 
 const updatePortfolio = async (req, res) => {
   try {
-    const portfolio = await Portfolio.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user._id },
-      req.body,
-      { 
-        new: true, 
-        runValidators: true 
-      }
-    );
+    const portfolio = await Portfolio.findByIdAndUpdate(req.params.id, req.body, { 
+      new: true, 
+      runValidators: true 
+    });
     if (!portfolio) {
-      return res.status(404).json({ message: 'Portfolio not found or you do not have permission to update it' });
+      return res.status(404).json({ message: 'Portfolio not found' });
     }
     res.json(portfolio);
   } catch (error) {
@@ -52,9 +48,9 @@ const updatePortfolio = async (req, res) => {
 
 const deletePortfolio = async (req, res) => {
   try {
-    const portfolio = await Portfolio.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+    const portfolio = await Portfolio.findByIdAndDelete(req.params.id);
     if (!portfolio) {
-      return res.status(404).json({ message: 'Portfolio not found or you do not have permission to delete it' });
+      return res.status(404).json({ message: 'Portfolio not found' });
     }
     res.json({ message: 'Portfolio deleted successfully' });
   } catch (error) {

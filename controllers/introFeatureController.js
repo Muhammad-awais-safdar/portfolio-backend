@@ -2,7 +2,7 @@ const IntroFeature = require('../models/IntroFeature');
 
 const getIntroFeatures = async (req, res) => {
   try {
-    const introFeatures = await IntroFeature.find({ userId: req.user._id }).sort({ order: 1, createdAt: -1 });
+    const introFeatures = await IntroFeature.find().sort({ order: 1, createdAt: -1 });
     res.json(introFeatures);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching intro features', error: error.message });
@@ -11,7 +11,7 @@ const getIntroFeatures = async (req, res) => {
 
 const createIntroFeature = async (req, res) => {
   try {
-    const introFeature = new IntroFeature({ ...req.body, userId: req.user._id });
+    const introFeature = new IntroFeature(req.body);
     await introFeature.save();
     res.status(201).json(introFeature);
   } catch (error) {
@@ -21,16 +21,12 @@ const createIntroFeature = async (req, res) => {
 
 const updateIntroFeature = async (req, res) => {
   try {
-    const introFeature = await IntroFeature.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user._id },
-      req.body,
-      { 
-        new: true, 
-        runValidators: true 
-      }
-    );
+    const introFeature = await IntroFeature.findByIdAndUpdate(req.params.id, req.body, { 
+      new: true, 
+      runValidators: true 
+    });
     if (!introFeature) {
-      return res.status(404).json({ message: 'Intro feature not found or you do not have permission to update it' });
+      return res.status(404).json({ message: 'Intro feature not found' });
     }
     res.json(introFeature);
   } catch (error) {
@@ -40,9 +36,9 @@ const updateIntroFeature = async (req, res) => {
 
 const deleteIntroFeature = async (req, res) => {
   try {
-    const introFeature = await IntroFeature.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+    const introFeature = await IntroFeature.findByIdAndDelete(req.params.id);
     if (!introFeature) {
-      return res.status(404).json({ message: 'Intro feature not found or you do not have permission to delete it' });
+      return res.status(404).json({ message: 'Intro feature not found' });
     }
     res.json({ message: 'Intro feature deleted successfully' });
   } catch (error) {

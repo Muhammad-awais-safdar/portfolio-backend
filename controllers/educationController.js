@@ -2,7 +2,7 @@ const Education = require('../models/Education');
 
 const getEducations = async (req, res) => {
   try {
-    const educations = await Education.find({ userId: req.user._id }).sort({ order: 1, createdAt: -1 });
+    const educations = await Education.find().sort({ order: 1, createdAt: -1 });
     res.json(educations);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching educations', error: error.message });
@@ -11,7 +11,7 @@ const getEducations = async (req, res) => {
 
 const createEducation = async (req, res) => {
   try {
-    const education = new Education({ ...req.body, userId: req.user._id });
+    const education = new Education(req.body);
     await education.save();
     res.status(201).json(education);
   } catch (error) {
@@ -21,16 +21,12 @@ const createEducation = async (req, res) => {
 
 const updateEducation = async (req, res) => {
   try {
-    const education = await Education.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user._id },
-      req.body,
-      { 
-        new: true, 
-        runValidators: true 
-      }
-    );
+    const education = await Education.findByIdAndUpdate(req.params.id, req.body, { 
+      new: true, 
+      runValidators: true 
+    });
     if (!education) {
-      return res.status(404).json({ message: 'Education not found or you do not have permission to update it' });
+      return res.status(404).json({ message: 'Education not found' });
     }
     res.json(education);
   } catch (error) {
@@ -40,9 +36,9 @@ const updateEducation = async (req, res) => {
 
 const deleteEducation = async (req, res) => {
   try {
-    const education = await Education.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+    const education = await Education.findByIdAndDelete(req.params.id);
     if (!education) {
-      return res.status(404).json({ message: 'Education not found or you do not have permission to delete it' });
+      return res.status(404).json({ message: 'Education not found' });
     }
     res.json({ message: 'Education deleted successfully' });
   } catch (error) {

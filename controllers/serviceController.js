@@ -2,7 +2,7 @@ const Service = require('../models/Service');
 
 const getServices = async (req, res) => {
   try {
-    const services = await Service.find({ userId: req.user._id }).sort({ order: 1, createdAt: -1 });
+    const services = await Service.find().sort({ order: 1, createdAt: -1 });
     res.json(services);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching services', error: error.message });
@@ -11,7 +11,7 @@ const getServices = async (req, res) => {
 
 const createService = async (req, res) => {
   try {
-    const service = new Service({ ...req.body, userId: req.user._id });
+    const service = new Service(req.body);
     await service.save();
     res.status(201).json(service);
   } catch (error) {
@@ -21,16 +21,12 @@ const createService = async (req, res) => {
 
 const updateService = async (req, res) => {
   try {
-    const service = await Service.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user._id },
-      req.body,
-      { 
-        new: true, 
-        runValidators: true 
-      }
-    );
+    const service = await Service.findByIdAndUpdate(req.params.id, req.body, { 
+      new: true, 
+      runValidators: true 
+    });
     if (!service) {
-      return res.status(404).json({ message: 'Service not found or you do not have permission to update it' });
+      return res.status(404).json({ message: 'Service not found' });
     }
     res.json(service);
   } catch (error) {
@@ -40,9 +36,9 @@ const updateService = async (req, res) => {
 
 const deleteService = async (req, res) => {
   try {
-    const service = await Service.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+    const service = await Service.findByIdAndDelete(req.params.id);
     if (!service) {
-      return res.status(404).json({ message: 'Service not found or you do not have permission to delete it' });
+      return res.status(404).json({ message: 'Service not found' });
     }
     res.json({ message: 'Service deleted successfully' });
   } catch (error) {

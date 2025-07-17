@@ -2,7 +2,7 @@ const Brand = require('../models/Brand');
 
 const getBrands = async (req, res) => {
   try {
-    const brands = await Brand.find({ userId: req.user._id }).sort({ order: 1, createdAt: -1 });
+    const brands = await Brand.find().sort({ order: 1, createdAt: -1 });
     res.json(brands);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching brands', error: error.message });
@@ -11,7 +11,7 @@ const getBrands = async (req, res) => {
 
 const createBrand = async (req, res) => {
   try {
-    const brand = new Brand({ ...req.body, userId: req.user._id });
+    const brand = new Brand(req.body);
     await brand.save();
     res.status(201).json(brand);
   } catch (error) {
@@ -21,16 +21,12 @@ const createBrand = async (req, res) => {
 
 const updateBrand = async (req, res) => {
   try {
-    const brand = await Brand.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user._id },
-      req.body,
-      { 
-        new: true, 
-        runValidators: true 
-      }
-    );
+    const brand = await Brand.findByIdAndUpdate(req.params.id, req.body, { 
+      new: true, 
+      runValidators: true 
+    });
     if (!brand) {
-      return res.status(404).json({ message: 'Brand not found or you do not have permission to update it' });
+      return res.status(404).json({ message: 'Brand not found' });
     }
     res.json(brand);
   } catch (error) {
@@ -40,9 +36,9 @@ const updateBrand = async (req, res) => {
 
 const deleteBrand = async (req, res) => {
   try {
-    const brand = await Brand.findOneAndDelete({ _id: req.params.id, userId: req.user._id });
+    const brand = await Brand.findByIdAndDelete(req.params.id);
     if (!brand) {
-      return res.status(404).json({ message: 'Brand not found or you do not have permission to delete it' });
+      return res.status(404).json({ message: 'Brand not found' });
     }
     res.json({ message: 'Brand deleted successfully' });
   } catch (error) {
